@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "grading-system": "file:",
+>>>>>>> e604fee4a43f674f6a1585b5ca66f404a618769f
     "next": "15.0.3",
     "react": "19.0.0-rc-66855b96-20241106",
     "react-dom": "19.0.0-rc-66855b96-20241106"
