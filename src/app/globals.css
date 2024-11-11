@@ -19,3 +19,24 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.flex {
+  display: flex;
+}
+
+.ml-28 {
+  margin-left: 7rem; /* Adjust based on the width of your sidebar */
+}
+
+.p-5 {
+  padding: 1.25rem;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
