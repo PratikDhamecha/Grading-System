@@ -1,3 +1,5 @@
+'use client'
+
 // pages/login.js
 import { useRouter } from "next/router";
 export default function Login() {

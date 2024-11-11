@@ -5,9 +5,11 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 
 export default function Home() {
-  const [data, setData] = useState(null);
-  const [filteredData, setFilteredData] = useState("");
+  const [pedningAssignment, setPedningAssignment] = useState([]);
+  const [filteredPendingAssignment, setFilteredPendingAssignment] = useState("");
   const [showMore, setShowMore] = useState(false);
+  const [submittedAssignment, setSubmittedAssignment] = useState([]);
+  const [filteredSubmittedAssignment, setFilteredSubmittedAssignment] = useState("");
 
   useEffect(() => {
     fetch("http://localhost:5000/students/pendingAssignments", {
@@ -15,18 +17,44 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: '66fe2951239d19f6ae91abf6' }),
+      body: JSON.stringify({ id: '6731b55168ef4fec1c15322b' }),
     })
       .then((response) => response.json())
-      .then((data) => setData(data));
+      .then((data) => setPedningAssignment(data));
+
+      fetch("http://localhost:5000/students/submittedAssignment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: '6731b55168ef4fec1c15322b' }),
+      })
+        .then((response) => response.json())
+        .then((data) => setSubmittedAssignment(data));
+
   }, []);
 
-  const filteredAssignments = data
-    ? data.filter((assign) =>
-      assign.subject.toLowerCase().includes((filteredData || "").toLowerCase()))
+  const filteredAssignments = pedningAssignment
+    ? pedningAssignment.filter((assign) =>
+      assign.subject.toLowerCase().includes((filteredPendingAssignment || "").toLowerCase()))
     : [];
 
   const assignmentsToShow = showMore ? filteredAssignments : filteredAssignments.slice(0, 4);
+
+  const filteredSubmittedAssignments = submittedAssignment ? submittedAssignment.filter((assign) => assign.assignmentDetails.subject.toLowerCase().includes((filteredSubmittedAssignment || "").toLowerCase())) : [];
+
+  const submittedAssignmentsToShow = filteredSubmittedAssignments.slice(0, 4);
+
+  const getBackgroundColorClass = (grade) => {
+    if (grade == 'A' || grade == 'A+') {
+      return 'bg-green-500';
+    } else if (grade == 'B' || grade == 'B+') {
+      return 'bg-yellow-500';
+    } else {
+      return 'bg-red-500';
+    }
+  };
+
 
   return (
     <div className="ml-28 h-screen w-auto text-black p-4">
@@ -87,7 +115,7 @@ export default function Home() {
                   className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
                   type="text"
                   placeholder="Search by subject"
-                  onChange={(e) => setFilteredData(e.target.value)}
+                  onChange={(e) => setFilteredPendingAssignment(e.target.value)}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
                   <Search className="text-gray-500" />
@@ -164,6 +192,7 @@ export default function Home() {
                   className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
                   type="text"
                   placeholder="Search by subject"
+                  onChange={(e) => setFilteredSubmittedAssignment(e.target.value)}
                 />
                 <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
                   <Search className="text-gray-500" />
@@ -176,46 +205,35 @@ export default function Home() {
               <thead className="">
                 <tr className="text-gray-500">
                   <th className="text-left font-serif font-bold"></th>
-                  <th className="text-left font-serif font-bold w-3/5">Assignment</th>
-                  <th className="text-left font-serif font-bold">Last Date</th>
-                  <th className="text-left font-serif font-bold"></th>
+                  <th className="text-left font-serif font-bold w-3/6">Assignment</th>
+                  <th className="text-left font-serif font-bold">Submission Date</th>
+                  <th className="text-left font-serif font-bold">Remarks</th>
+                  <th className="text-right font-serif font-bold">Grade</th>
                 </tr>
               </thead>
               <tbody className="">
-                <tr className="align-middle">
-                  <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
-                    {/* Icon or Image */}
-                  </td>
-                  <td>
-                    <p className="font-serif font-bold">Computer Networks</p>
-                    <p className="font-serif">Assignment - 6</p>
-                  </td>
-                  <td>
-                    <p className="font-serif font-bold">12/3/2024</p>
-                  </td>
-                  <td className="text-right">
-                    <div className="bg-blue text-white p-2 rounded-full inline-flex items-center justify-center">
-                      <ListPlus />
-                    </div>
-                  </td>
-                </tr>
-                <tr className="align-middle">
-                  <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
-                    {/* Icon or Image */}
-                  </td>
-                  <td>
-                    <p className="font-serif font-bold">Data Structures</p>
-                    <p className="font-serif">Assignment - 4</p>
-                  </td>
-                  <td>
-                    <p className="font-serif font-bold">15/3/2024</p>
-                  </td>
-                  <td className="text-right">
-                    <div className="bg-blue text-white p-2 rounded-full inline-flex items-center justify-center">
-                      <ListPlus />
-                    </div>
-                  </td>
-                </tr>
+                {submittedAssignmentsToShow.map((assignment) => (
+                  <tr key={assignment.id} className="align-middle mb-3">
+                    <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
+                      {/* Icon or Image */}
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{assignment.assignmentDetails.subject}</p>
+                      <p className="font-serif">{assignment.assignmentDetails.title}</p>
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
+                    </td>
+                    <td className="text-right">
+                      <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
+                        <p className="font-serif font-bol">{assignment.assignments.grade}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
                 {/* Add more rows as needed */}
               </tbody>
             </table>
