@@ -1,5 +1,6 @@
 // pages/login.js
-import { useRouter } from "next/router";
+import { Link } from 'lucide-react';
+import link from 'next/link';
 export default function Login() {
     return (
       <div className="bg-gray-100 flex items-center justify-center min-h-screen">
@@ -44,12 +45,14 @@ export default function Login() {
               Login
             </button>
           </form>
-          <p className="text-center text-[#514DEC] text-sm mt-6">
+          <div className="text-center text-[#514DEC] text-sm mt-6">
             Don't have an account?{" "}
-            <a href="#" className="text-[#05041F] hover:text-[#A9A6FF] font-semibold">
-              Sign up
-            </a>
-          </p>
+            <Link href="/signup">
+              <a className="text-[#514DEC] hover:text-[#A9A6FF] font-semibold">
+                Sign up
+              </a>
+          </Link>
+          </div>
         </div>
       </div>
     );
