@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "grading-system": "file:",
     "hugeicons-react": "^0.3.0",
     "lucide-react": "^0.456.0",
     "next": "15.0.3",
