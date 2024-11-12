@@ -1,6 +1,6 @@
 'use client'
 
-import { Bell, ChartColumnDecreasing, ListChecks, ListPlus, Search } from "lucide-react";
+import { Bell, ChartColumnDecreasing, CrossIcon, ListChecks, ListPlus, Search, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 
@@ -10,6 +10,7 @@ export default function Home() {
   const [showMore, setShowMore] = useState(false);
   const [submittedAssignment, setSubmittedAssignment] = useState([]);
   const [filteredSubmittedAssignment, setFilteredSubmittedAssignment] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetch("http://localhost:5000/students/pendingAssignments", {
@@ -128,20 +129,24 @@ export default function Home() {
               <thead className="">
                 <tr className="text-gray-500">
                   <th className="text-left font-serif font-bold"></th>
-                  <th className="text-left font-serif font-bold w-3/5">Assignment</th>
+                  <th className="text-left font-serif font-bold w-3/6">Assignment</th>
+                  <th className="text-left font-serif font-bold">Starting Date</th>
                   <th className="text-left font-serif font-bold">Last Date</th>
                   <th className="text-left font-serif font-bold"></th>
                 </tr>
               </thead>
               <tbody className="">
                 {assignmentsToShow.map((assignment) => (
-                  <tr key={assignment.id} className="align-middle mb-3">
+                  <tr key={assignment.id} className="align-middle h-16">
                     <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                       {/* Icon or Image */}
                     </td>
                     <td>
                       <p className="font-serif font-bold">{assignment.subject}</p>
                       <p className="font-serif">{assignment.title}</p>
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{new Date(assignment.createdAt).toLocaleDateString()}</p>
                     </td>
                     <td>
                       <p className="font-serif font-bold">{new Date(assignment.deadline).toLocaleDateString()}</p>
@@ -160,13 +165,13 @@ export default function Home() {
                 </tr>
               </tbody>
             </table>
-            {!showMore && filteredAssignments.length > 4 && (
-              <button
-                className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={() => setShowMore(true)}
+            {(
+              <div
+                className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
+                onClick={() => { setShowMore(true); setIsModalOpen(true); }}
               >
                 View More
-              </button>
+              </div>
             )}
           </div>
           <div className="w-1/4 h-96 bg-white rounded-2xl p-4">
@@ -213,7 +218,7 @@ export default function Home() {
               </thead>
               <tbody className="">
                 {submittedAssignmentsToShow.map((assignment) => (
-                  <tr key={assignment.id} className="align-middle mb-3">
+                  <tr key={assignment.id} className="align-middle h-16">
                     <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                       {/* Icon or Image */}
                     </td>
@@ -244,6 +249,56 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Pending Assignments Modal */}
+        <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center modal-overlay modal-overlay ${isModalOpen ? 'show' : ''}`}>
+          <div className={`bg-white p-4 rounded-lg w-3/4 h-3/4 overflow-auto modal-content ${isModalOpen ? 'show' : ''}`}>
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-serif font-bold">All Pending Assignments</h2>
+              <button
+                className="text-darkblue font-bold"
+                onClick={() => setIsModalOpen(false)}
+              >
+                <X />
+              </button>
+            </div>
+            <table className="w-full mt-4">
+              <thead className="">
+              <tr className="text-gray-500">
+                  <th className="text-left font-serif font-bold"></th>
+                  <th className="text-left font-serif font-bold w-3/6">Assignment</th>
+                  <th className="text-left font-serif font-bold">Starting Date</th>
+                  <th className="text-left font-serif font-bold">Last Date</th>
+                  <th className="text-left font-serif font-bold"></th>
+                </tr>
+              </thead>
+              <tbody className="">
+                {filteredAssignments.map((assignment) => (
+                  <tr key={assignment.id} className="align-middle h-16">
+                  <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
+                    {/* Icon or Image */}
+                  </td>
+                  <td>
+                    <p className="font-serif font-bold">{assignment.subject}</p>
+                    <p className="font-serif">{assignment.title}</p>
+                  </td>
+                  <td>
+                    <p className="font-serif font-bold">{new Date(assignment.createdAt).toLocaleDateString()}</p>
+                  </td>
+                  <td>
+                    <p className="font-serif font-bold">{new Date(assignment.deadline).toLocaleDateString()}</p>
+                  </td>
+                  <td className="text-right">
+                    <div className="bg-blue text-white p-2 rounded-full inline-flex items-center justify-center">
+                      <ListPlus />
+                    </div>
+                  </td>
+                </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      
 
     </div >
   );
