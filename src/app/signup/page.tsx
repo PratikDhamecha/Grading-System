@@ -1,4 +1,7 @@
-// pages/signup.js
+// pages/signup.tsx (or signup.js if you're using JavaScript)
+import { ReactElement } from 'react';
+import RootLayout from '../layout'; // Make sure the path is correct
+
 export default function SignUpPage() {
     return (
         <div className="flex items-center justify-center min-h-screen bg-[#FFFFFF]">
@@ -40,7 +43,7 @@ export default function SignUpPage() {
                     <p className="text-gray-600">Or sign up with:</p>
                     <div className="flex justify-center mt-2">
                         <button className="mr-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition duration-200">Google</button>
-                        <button className="px-4 py-2 bg-blue-700 text-white rounded hover:bg-blue-800 transition duration-200">LinkedIn</button>
+                        <button className="px-4 py-2 bg-blue text-white rounded hover:bg-blue-800 transition duration-200">LinkedIn</button>
                     </div>
                 </div>
                 <label className="block mt-4 text-center text-gray-600">
@@ -50,3 +53,8 @@ export default function SignUpPage() {
         </div>
     );
 }
+
+// Layout function to remove sidebar on SignUpPage
+SignUpPage.getLayout = function getLayout(page: ReactElement) {
+    return <RootLayout showSidebar={false}>{page}</RootLayout>;
+};
