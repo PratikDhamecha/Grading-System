@@ -9,6 +9,10 @@
     "lint": "next lint"
   },
   "dependencies": {
+<<<<<<< HEAD
+=======
+    "grading-system": "file:",
+>>>>>>> ade68e5fba74db19f8b327f9b8a3b6d43d050c1d
     "lucide-react": "^0.456.0",
     "next": "15.0.3",
     "react": "^18.3.1",
