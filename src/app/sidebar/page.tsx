@@ -8,6 +8,7 @@ export default function Sidebar() {
     const router = useRouter()
     return (
         <>
+        
             <div className="h-screen flex fixed top-0 left-0 flex-col justify-between bg-white w-28 text-black p-3 float-start items-center me-4">
                 <div className="flex-shrink-0">
                     <Atom color="#05041F" size={36} />
@@ -35,7 +36,9 @@ export default function Sidebar() {
                 </div>
                 <div className="flex-shrink-0">
                     <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center hover:bg-darkblue">
-                        <LogOut color="#514DEC" />
+                        <LogOut color="#514DEC" onClick={() => {
+                            router.replace('/')
+                        }}/>
                     </div>
                 </div>
             </div>

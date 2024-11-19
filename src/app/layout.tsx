@@ -21,17 +21,13 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-  showSidebar = true,
 }: Readonly<{
   children: React.ReactNode;
-  showSidebar?: boolean;
 }>) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-200`} 
-      >
-        { showSidebar && <Sidebar /> }
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-200`} >
         {children}
       </body>
     </html>
