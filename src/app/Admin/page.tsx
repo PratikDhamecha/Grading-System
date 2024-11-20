@@ -10,7 +10,12 @@ import { useRouter } from "next/navigation"
 export default function AdminHome() {
     const [activeTab, setActiveTab] = useState("pending");
     const router = useRouter()
-
+    const assignmetnData = {
+        pendingStudent : 200,
+        totalStudents : 373,
+        title: "",
+        subjectName: ""
+    }
     interface Assignment {
         _id: string;
         subjectName: string;
@@ -21,7 +26,6 @@ export default function AdminHome() {
         totalStudents: number;
         pendingStudentsCount: number;
     }
-
     const [state, setState] = useState<{
         filteredData: string;
         faculty: { name: string };
@@ -31,6 +35,8 @@ export default function AdminHome() {
         submitedStudents: any;
         showMore: boolean;
         isModalOpen: boolean;
+        filterPendingStudents: String;
+        filterSubmittedStudents: String;
     }>({
         filteredData: '',
         faculty: { name: "" },
@@ -39,10 +45,10 @@ export default function AdminHome() {
         pendingStudents: [],
         showMore: false,
         isModalOpen: false,
-        submitedStudents: []
+        submitedStudents: [],
+        filterPendingStudents: "",
+        filterSubmittedStudents: ""
     });
-
-
     useEffect(() => {
         const facultyId = localStorage.getItem("facultyId")
         // Get Faculty Details
@@ -65,8 +71,14 @@ export default function AdminHome() {
         fetch("http://localhost:5000/subjects/getSubjectByFaculty/" + facultyId)
             .then((res) => res.json())
             .then((data) => setState((prevState) => ({ ...prevState, subjectData: data })))
-
     }, [])
+
+    if(state.assignmentData.length > 0){
+        assignmetnData.pendingStudent = state.assignmentData[0].pendingStudentsCount;
+        assignmetnData.totalStudents = state.assignmentData[0].totalStudents;
+        assignmetnData.title = state.assignmentData[0].title;
+        assignmetnData.subjectName = state.assignmentData[0].subjectName
+    }
 
     const setPendingStudents = async (id: any) => {
         const response = await fetch("http://localhost:5000/assignments/pendingStudents", {
@@ -95,7 +107,11 @@ export default function AdminHome() {
         setState((prevState) => ({ ...prevState, isModalOpen: true }))
     };
 
-    const filteredAssignment = state.assignmentData ? state.assignmentData.filter((data) => data.subjectName.includes(state.filteredData)) : []
+    const filteredAssignment = state.assignmentData ? state.assignmentData.filter((data) => data.subjectName.toLowerCase().includes(state.filteredData.toLowerCase())) : []
+
+    const filteredPendingStudent = state.pendingStudents ? state.pendingStudents.filter((data: any) => data.name.toLowerCase().includes(state.filterPendingStudents.toLowerCase())) : []
+
+    const filteredSubmittedStudent = state.submitedStudents ? state.submitedStudents.filter((data: any) => data.name.toLowerCase().includes(state.filterSubmittedStudents.toLowerCase())) : []
 
     return (
         <>
@@ -189,9 +205,13 @@ export default function AdminHome() {
                                     </tr>
                                 </thead>
                                 <tbody className="">
-
                                     {filteredAssignment.map((assignment) => (
-                                        <tr key={assignment._id} className="align-middle h-16">
+                                        <tr key={assignment._id} className="align-middle h-16" onClick={() => {
+                                            assignmetnData.pendingStudent = assignment.pendingStudentsCount
+                                            assignmetnData.totalStudents = assignment.totalStudents
+                                            assignmetnData.title = assignment.title
+                                            assignmetnData.subjectName = assignment.subjectName
+                                        }}>
                                             <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                                                 {/* Icon or Image */}
                                             </td>
@@ -238,12 +258,12 @@ export default function AdminHome() {
                         <div className="w-1/4 h-96 bg-white rounded-2xl p-4">
                             {/* Box-2 Header */}
                             <div className="">
-                                <p className="text-2xl font-serif font-bold mb-3">Graph</p>
+                                <p className="text-2xl font-serif font-bold mb-3">{`${assignmetnData.title}(${assignmetnData.subjectName})`}</p>
                             </div>
                             {/* Box-2 Content */}
                             <CompletionChart
-                                pendingStudentsCount={200}
-                                totalStudents={373}
+                                pendingStudentsCount={assignmetnData.pendingStudent}
+                                totalStudents={assignmetnData.totalStudents}
                             />
                         </div>
                     </div>
@@ -257,6 +277,24 @@ export default function AdminHome() {
                         <div className="flex justify-start space-x-5">
                             <div className={`text-2xl font-serif font-bold cursor-pointer ${activeTab === "pending" ? "border-b-4 border-blue" : ""}`} onClick={() => { setActiveTab("pending") }}>Pending Students</div>
                             <div className={`text-2xl font-serif font-bold cursor-pointer ${activeTab === "submitted" ? "border-b-4 border-blue" : ""}`} onClick={() => { setActiveTab("submitted") }}>Submitted Students</div>
+                        </div>
+                        <div className="relative">
+                            <input
+                                className="bg-slate-200 h-10 rounded-lg ps-3 pe-3 w-full"
+                                type="text"
+                                placeholder="Search by subject"
+                                onChange={(e) => {
+                                    if (activeTab === "submitted") {
+                                        setState((prevState) => ({ ...prevState, filterSubmittedStudents: e.target.value }))
+                                    }
+                                    else {
+                                        setState((prevState) => ({ ...prevState, filterPendingStudents: e.target.value }))
+                                    }
+                                }}
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
+                                <Search className="text-gray-500" />
+                            </div>
                         </div>
                         <button
                             className="text-darkblue font-bold"
@@ -277,7 +315,7 @@ export default function AdminHome() {
                             </tr>
                         </thead>
                         <tbody className="">
-                            {activeTab === "pending" && state.pendingStudents.map((student: any) => (
+                            {activeTab === "pending" && filteredPendingStudent.map((student: any) => (
                                 <tr key={student._id} className="align-middle h-16">
                                     <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                                         {/* Icon or Image */}
@@ -296,7 +334,7 @@ export default function AdminHome() {
                                     </td>
                                 </tr>
                             ))}
-                            {activeTab === "submitted" && state.submitedStudents.map((student: any) => (
+                            {activeTab === "submitted" && filteredSubmittedStudent.map((student: any) => (
                                 <tr key={student.id} className="align-middle h-16">
                                     <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                                         {/* Icon or Image */}

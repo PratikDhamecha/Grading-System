@@ -1,9 +1,7 @@
 'use client'
-
-import { Bell, ChartColumnDecreasing, CrossIcon, ListChecks, ListPlus, Search, X } from "lucide-react";
+import { Bell, ChartColumnDecreasing, ChevronDown, CrossIcon, ListChecks, ListPlus, Search, X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-
 export default function Home() {
   const [pedningAssignment, setPedningAssignment] = useState([]);
   const [filteredPendingAssignment, setFilteredPendingAssignment] = useState("");
@@ -12,13 +10,15 @@ export default function Home() {
   const [filteredSubmittedAssignment, setFilteredSubmittedAssignment] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [student, setStudent] = useState({});
+  const [subject, setSubject] = useState([])
 
   useEffect(() => {
     const studentId = localStorage.getItem('studentId');
+    // Get student
     fetch("http://localhost:5000/students/" + studentId)
       .then((response) => response.json())
       .then((data) => setStudent(data));
-
+    // Get pendingAssignment
     fetch("http://localhost:5000/students/pendingAssignments", {
       method: "POST",
       headers: {
@@ -28,7 +28,7 @@ export default function Home() {
     })
       .then((response) => response.json())
       .then((data) => setPedningAssignment(data));
-
+    // submittedAssignment
     fetch("http://localhost:5000/students/submittedAssignment", {
       method: "POST",
       headers: {
@@ -38,25 +38,27 @@ export default function Home() {
     })
       .then((response) => response.json())
       .then((data) => setSubmittedAssignment(data));
-
   }, []);
-
+  // Get subjects
+  fetch("http://localhost:5000/semesters/getSemesterById/" + student.semester)
+    .then((res) => res.json)
+    .then((data) => setSubject(data.students))
   const handleViewMoreClick = () => {
     setShowMore(true);
     setIsModalOpen(true);
   };
-
   const filteredAssignments = pedningAssignment
     ? pedningAssignment.filter((assign) =>
-      assign.subject.includes(filteredPendingAssignment)
+      assign.subjectName?.toLowerCase().includes(filteredPendingAssignment.toLowerCase())
     ) : [];
-
   const assignmentsToShow = showMore ? filteredAssignments : filteredAssignments.slice(0, 4);
 
-  const filteredSubmittedAssignments = submittedAssignment ? submittedAssignment.filter((assign) => assign.assignmentDetails.subject.includes((filteredSubmittedAssignment || ""))) : [];
-
+  const filteredSubmittedAssignments = submittedAssignment
+    ? submittedAssignment.filter((assign) =>
+      assign.assignmentDetails.subjectName?.toLowerCase().includes((filteredSubmittedAssignment || "").toLowerCase())
+    )
+    : [];
   const submittedAssignmentsToShow = filteredSubmittedAssignments.slice(0, 4);
-
   const getBackgroundColorClass = (grade) => {
     if (grade == 'A' || grade == 'A+') {
       return 'bg-green-500';
@@ -67,10 +69,8 @@ export default function Home() {
     }
   };
 
-
   return (
     <div className="ml-28 h-screen w-auto text-black p-4">
-
       <div className="flex flex-row justify-between mb-9">
         {/* Left Side Section  */}
         <div>
@@ -86,9 +86,7 @@ export default function Home() {
               <p className="text-sm">5</p>
             </div>
           </div>
-
         </div>
-
         {/* Right side section */}
         <div>
           <div className="float-end bg-darkblue h-14 rounded-full text-white flex items-center justify-center p-3 ms-3">
@@ -98,9 +96,7 @@ export default function Home() {
             <Bell color="#05041F" />
           </div>
         </div>
-
       </div>
-
       <div>
         <p className="text-gray-500 font-serif text-2xl"> Hello,</p>
         <h1 className=" font-serif font-bold text-5xl float-start me-3">{student.name}</h1>
@@ -114,7 +110,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
       {/* Big box */}
       <div className="mt-4 w-full h-auto float-start bg-gray-300 rounded-2xl p-4 mb-4">
         <div className="flex space-x-3 mb-3">
@@ -122,19 +117,35 @@ export default function Home() {
             {/* Box-1 Header Content */}
             <div className="flex flex-row justify-between">
               <p className="text-2xl font-serif font-bold mb-3">Pending assignments</p>
-              <div className="relative align-middle">
-                <input
-                  className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
-                  type="text"
-                  placeholder="Search by subject"
-                  onChange={(e) => setFilteredPendingAssignment(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
-                  <Search className="text-gray-500" />
+              <div className="flex flex-row justify-end align-middle space-x-2">
+                <div className="relative">
+                  <input
+                    className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
+                    type="text"
+                    placeholder="Search by subject"
+                    onChange={(e) => setFilteredPendingAssignment(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
+                    <Search className="text-gray-500" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <select className="bg-slate-200 h-10 rounded-lg ps-3 pe-10 w-full appearance-none text-gray-700" onChange={(e) => {
+                    setFilteredPendingAssignment(e.target.value)
+                  }}>
+                    <option value="">Select Subject</option>
+                    {/* {subject.map((subject) => {
+                      return (
+                        <option key={subject._id} value={subject.subjectName} className="text-gray-700">{subject.subjectName}</option>
+                      )
+                    })} */}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <ChevronDown className="text-gray-500" />
+                  </div>
                 </div>
               </div>
             </div>
-
             {/* Box-1 Content */}
             <table className="w-full mt-4">
               <thead className="">
@@ -153,7 +164,7 @@ export default function Home() {
                       {/* Icon or Image */}
                     </td>
                     <td>
-                      <p className="font-serif font-bold">{assignment.subject}</p>
+                      <p className="font-serif font-bold">{assignment.subjectName}</p>
                       <p className="font-serif">{assignment.title}</p>
                     </td>
                     <td>
@@ -176,7 +187,7 @@ export default function Home() {
                 </tr>
               </tbody>
             </table>
-            {(
+            {pedningAssignment > 4 && (
               <div
                 className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
                 onClick={handleViewMoreClick}
@@ -234,7 +245,7 @@ export default function Home() {
                       {/* Icon or Image */}
                     </td>
                     <td>
-                      <p className="font-serif font-bold">{assignment.assignmentDetails.subject}</p>
+                      <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
                       <p className="font-serif">{assignment.assignmentDetails.title}</p>
                     </td>
                     <td>
@@ -283,13 +294,13 @@ export default function Home() {
               </tr>
             </thead>
             <tbody className="">
-              {submittedAssignment.map((assignment) => (
-                <tr key={assignment.id} className="align-middle h-16">
+              {pedningAssignment.map((assignment) => (
+                <tr key={assignment._id} className="align-middle h-16">
                   <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                     {/* Icon or Image */}
                   </td>
                   <td>
-                    <p className="font-serif font-bold">{assignment.subject}</p>
+                    <p className="font-serif font-bold">{assignment.subjectName}</p>
                     <p className="font-serif">{assignment.title}</p>
                   </td>
                   <td>

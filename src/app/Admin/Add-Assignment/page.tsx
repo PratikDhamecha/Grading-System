@@ -9,23 +9,41 @@ function AddAssignment() {
     const [subject, setSubject] = useState([])
     const [semester, setSemester] = useState([])
     const [assignment, setAssignment] = useState<any>({})
-    const facultyId = localStorage.getItem('facultyId')
+    const facultyId = localStorage.getItem("facultyId")
 
     useEffect(() => {
+        // Get all subject teached by the faculty
         fetch("http://localhost:5000/subjects/getSubjectByFaculty/" + facultyId)
             .then(res => res.json())
             .then(data => setSubject(data))
 
+        // Get all sem in which faculty go to teach
         fetch("http://localhost:5000/semesters/getSemesterByFaculty/" + facultyId)
             .then(res => res.json())
             .then(data => setSemester(data))
     }, [])
 
+    // Add new assignment 
     const handleSubmit = (e: any) => {
-        setAssignment({...assignment, facultyId: facultyId})
-        fetch("http://localhost:5000/assignments")
-        .then(() => {router.replace('/Admin')})
+        e.preventDefault();
+        console.log("Handle Submit called ");
+
+        // Create a new assignment object that includes the facultyId
+        const updatedAssignment = { ...assignment, facultyId: facultyId };
+        // console.log(updatedAssignment);
+        
+        fetch("http://localhost:5000/assignments/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(updatedAssignment),
+        })
+            .then((res) => {
+                console.log(res);
+            });
     }
+
     return (
         <div className="ml-40 h-screen w-auto text-black p-4">
             <div className="flex justify-between items-center mb-8">

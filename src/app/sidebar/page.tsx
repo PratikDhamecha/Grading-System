@@ -16,26 +16,26 @@ export default function Sidebar() {
                 <div className="flex-grow flex items-center">
                     <ul className="space-y-4">
                         <li>
-                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center hover:bg-darkblue default:bg-darkblue">
+                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue default:bg-darkblue">
                                 <LayoutGrid color="#514DEC" />
                             </div>
                         </li>
                         <li>
-                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center hover:bg-darkblue" onClick={() => {
+                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue" onClick={() => {
                                 router.push('/profile')
                             }}>
                                 <Box color="#514DEC" />
                             </div>
                         </li>
                         <li>
-                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center hover:bg-darkblue">
+                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue">
                                 <AlignJustify color="#514DEC" />
                             </div>
                         </li>
                     </ul>
                 </div>
                 <div className="flex-shrink-0">
-                    <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center hover:bg-darkblue">
+                    <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center cursor-pointer justify-center hover:bg-darkblue">
                         <LogOut color="#514DEC" onClick={() => {
                             router.replace('/')
                         }}/>
