@@ -37,6 +37,7 @@ export default function AdminHome() {
         isModalOpen: boolean;
         filterPendingStudents: String;
         filterSubmittedStudents: String;
+        graphData: { pendingStudents: number, totalStudents: number, title: string, subjectName: string };
     }>({
         filteredData: '',
         faculty: { name: "" },
@@ -47,7 +48,8 @@ export default function AdminHome() {
         isModalOpen: false,
         submitedStudents: [],
         filterPendingStudents: "",
-        filterSubmittedStudents: ""
+        filterSubmittedStudents: "",
+        graphData: { pendingStudents: 0, totalStudents: 0, title: "", subjectName: "" }
     });
     useEffect(() => {
         const facultyId = localStorage.getItem("facultyId")
@@ -73,13 +75,6 @@ export default function AdminHome() {
             .then((data) => setState((prevState) => ({ ...prevState, subjectData: data })))
     }, [])
 
-    if(state.assignmentData.length > 0){
-        assignmetnData.pendingStudent = state.assignmentData[0].pendingStudentsCount;
-        assignmetnData.totalStudents = state.assignmentData[0].totalStudents;
-        assignmetnData.title = state.assignmentData[0].title;
-        assignmetnData.subjectName = state.assignmentData[0].subjectName
-    }
-
     const setPendingStudents = async (id: any) => {
         const response = await fetch("http://localhost:5000/assignments/pendingStudents", {
             method: "POST",
@@ -101,6 +96,24 @@ export default function AdminHome() {
             .then((res) => res.json())
             .then((data) => setState((prevState) => ({ ...prevState, submitedStudents: data })))
     }
+
+    if(state.assignmentData.length > 0){
+        assignmetnData.pendingStudent = state.assignmentData[0].pendingStudentsCount;
+        assignmetnData.totalStudents = state.assignmentData[0].totalStudents;
+        assignmetnData.title = state.assignmentData[0].title;
+        assignmetnData.subjectName = state.assignmentData[0].subjectName
+
+        // setState((prevState) => ({
+        //     ...prevState,
+        //     graphData: {
+        //         ...prevState.graphData,
+        //         pendingStudents: state.assignmentData[0]?.pendingStudentsCount || 0,
+        //         totalStudents: state.assignmentData[0]?.totalStudents || 0,
+        //         title: state.assignmentData[0]?.title || '',
+        //         subjectName: state.assignmentData[0]?.subjectName || ''
+        //     }
+        // }));
+    }   
 
     const handleViewMoreClick = () => {
         setState((prevState) => ({ ...prevState, showMore: true }))
@@ -204,14 +217,9 @@ export default function AdminHome() {
                                         <th className="text-right font-serif font-bold">View</th>
                                     </tr>
                                 </thead>
-                                <tbody className="">
+                                <tbody>
                                     {filteredAssignment.map((assignment) => (
-                                        <tr key={assignment._id} className="align-middle h-16" onClick={() => {
-                                            assignmetnData.pendingStudent = assignment.pendingStudentsCount
-                                            assignmetnData.totalStudents = assignment.totalStudents
-                                            assignmetnData.title = assignment.title
-                                            assignmetnData.subjectName = assignment.subjectName
-                                        }}>
+                                        <tr key={assignment._id} className="align-middle h-16">
                                             <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                                                 {/* Icon or Image */}
                                             </td>

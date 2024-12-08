@@ -1,23 +1,44 @@
 'use client'
 import { Bell, ChartColumnDecreasing, ChevronDown, CrossIcon, ListChecks, ListPlus, Search, X } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import toast from "react-hot-toast";
 export default function Home() {
   const [pedningAssignment, setPedningAssignment] = useState([]);
   const [filteredPendingAssignment, setFilteredPendingAssignment] = useState("");
-  const [showMore, setShowMore] = useState(false);
+  const [pendingShowMore, setPendingShowMore] = useState(false);
+  const [submittedShowMore, setSubmittedShowMore] = useState(false);
+  const [isSubmittedModalOpen, setIsSubmittedModalOpen] = useState(false);
   const [submittedAssignment, setSubmittedAssignment] = useState([]);
   const [filteredSubmittedAssignment, setFilteredSubmittedAssignment] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPendingModalOpen, setIsPendingModalOpen] = useState(false);
   const [student, setStudent] = useState({});
-  const [subject, setSubject] = useState([])
+  const [subject, setSubject] = useState([]);
+  const [notification, setNotification] = useState([]);
+  const fileInputRef = useRef(null);
+  const studentId = localStorage.getItem('studentId');
 
   useEffect(() => {
-    const studentId = localStorage.getItem('studentId');
     // Get student
     fetch("http://localhost:5000/students/" + studentId)
       .then((response) => response.json())
       .then((data) => setStudent(data));
+  }, [])
+
+  useEffect(() => {
+    if (student && student.semester) {
+      fetch("http://localhost:5000/semesters/getSemesterById/" + student.semester)
+        .then((res) => res.json())
+        .then((data) => setSubject(data.subjects))
+
+      fetch("http://localhost:5000/notifications/student/" + studentId)
+        .then((res) => res.json())
+        .then((data) => setNotification(data))
+    }
+  }, [student])
+
+
+  useEffect(() => {
     // Get pendingAssignment
     fetch("http://localhost:5000/students/pendingAssignments", {
       method: "POST",
@@ -34,24 +55,27 @@ export default function Home() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ id: '6731b55168ef4fec1c15322b' }),
+      body: JSON.stringify({ id: studentId }),
     })
       .then((response) => response.json())
       .then((data) => setSubmittedAssignment(data));
   }, []);
-  // Get subjects
-  fetch("http://localhost:5000/semesters/getSemesterById/" + student.semester)
-    .then((res) => res.json)
-    .then((data) => setSubject(data.students))
-  const handleViewMoreClick = () => {
-    setShowMore(true);
-    setIsModalOpen(true);
+
+  const handleViewMoreClickForPending = () => {
+    setPendingShowMore(true);
+    setIsPendingModalOpen(true);
   };
+
+  const handleViewMoreClickForSubmitted = () => {
+    setSubmittedShowMore(true);
+    setIsSubmittedModalOpen(true);
+  };
+
   const filteredAssignments = pedningAssignment
     ? pedningAssignment.filter((assign) =>
       assign.subjectName?.toLowerCase().includes(filteredPendingAssignment.toLowerCase())
     ) : [];
-  const assignmentsToShow = showMore ? filteredAssignments : filteredAssignments.slice(0, 4);
+  const assignmentsToShow = pendingShowMore ? filteredAssignments : filteredAssignments.slice(0, 4);
 
   const filteredSubmittedAssignments = submittedAssignment
     ? submittedAssignment.filter((assign) =>
@@ -59,6 +83,7 @@ export default function Home() {
     )
     : [];
   const submittedAssignmentsToShow = filteredSubmittedAssignments.slice(0, 4);
+  
   const getBackgroundColorClass = (grade) => {
     if (grade == 'A' || grade == 'A+') {
       return 'bg-green-500';
@@ -66,6 +91,38 @@ export default function Home() {
       return 'bg-yellow-500';
     } else {
       return 'bg-red-500';
+    }
+  };
+
+  
+  const handleDivClick = () => {
+    // Programmatically trigger the file input click
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (assignmentId, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("studentId", student._id); // Replace student._id with your actual student ID
+    formData.append("assignmentId", assignmentId);
+
+    try {
+      const response = await fetch("http://localhost:5000/students/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response) {
+        toast.success("Assignment uploaded successfully");
+      } else {
+        toast.error("Failed to upload");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast.error("An error occurred");
     }
   };
 
@@ -89,9 +146,6 @@ export default function Home() {
         </div>
         {/* Right side section */}
         <div>
-          <div className="float-end bg-darkblue h-14 rounded-full text-white flex items-center justify-center p-3 ms-3">
-            Add Assignment
-          </div>
           <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center float-end">
             <Bell color="#05041F" />
           </div>
@@ -134,11 +188,11 @@ export default function Home() {
                     setFilteredPendingAssignment(e.target.value)
                   }}>
                     <option value="">Select Subject</option>
-                    {/* {subject.map((subject) => {
+                    {subject.map((subject) => {
                       return (
                         <option key={subject._id} value={subject.subjectName} className="text-gray-700">{subject.subjectName}</option>
                       )
-                    })} */}
+                    })}
                   </select>
                   <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
                     <ChevronDown className="text-gray-500" />
@@ -154,7 +208,7 @@ export default function Home() {
                   <th className="text-left font-serif font-bold w-3/6">Assignment</th>
                   <th className="text-left font-serif font-bold">Starting Date</th>
                   <th className="text-left font-serif font-bold">Last Date</th>
-                  <th className="text-left font-serif font-bold"></th>
+                  <th className="text-right font-serif font-bold">Submit</th>
                 </tr>
               </thead>
               <tbody className="">
@@ -174,9 +228,15 @@ export default function Home() {
                       <p className="font-serif font-bold">{new Date(assignment.deadline).toLocaleDateString()}</p>
                     </td>
                     <td className="text-right">
-                      <div className="bg-blue text-white p-2 rounded-full inline-flex items-center justify-center">
+                      <div className="bg-blue text-white p-2 rounded-full inline-flex items-center justify-center cursor-pointer" onClick={handleDivClick}>
                         <ListPlus />
                       </div>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: "none" }}
+                        onChange={(e) => handleFileChange(assignment._id, e)}
+                      />
                     </td>
                   </tr>
                 ))}
@@ -187,10 +247,10 @@ export default function Home() {
                 </tr>
               </tbody>
             </table>
-            {pedningAssignment > 4 && (
+            {(
               <div
                 className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
-                onClick={handleViewMoreClick}
+                onClick={handleViewMoreClickForPending}
               >
                 View More
               </div>
@@ -202,10 +262,16 @@ export default function Home() {
               <p className="text-2xl font-serif font-bold mb-3">Notification</p>
             </div>
             {/* Box-2 Content */}
-            <div className="flex space-y-1">
-              <div className="h-10 bg-slate-200 w-full rounded-full flex justify-center items-center">
+            <div className="flex flex-col">
+              {notification.map((notify) => (
+                <div key={notify._id} className="bg-slate-200 w-full rounded-lg p-4 mb-4">
+                  <h1 className="text-gray-800 text-xl font-bold mb-1">{notify.title}</h1>
+                  <p className="text-gray-600 text-sm">{notify.message}</p>
+                </div>
+              ))}
+              {/* <div className="h-10 bg-slate-200 w-full rounded-full flex justify-center items-center">
                 <p className="text-gray-500">New Assingment of CN uploaded</p>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -232,38 +298,53 @@ export default function Home() {
               <thead className="">
                 <tr className="text-gray-500">
                   <th className="text-left font-serif font-bold"></th>
-                  <th className="text-left font-serif font-bold w-3/6">Assignment</th>
+                  <th className="text-left font-serif font-bold w-2/6">Assignment</th>
                   <th className="text-left font-serif font-bold">Submission Date</th>
                   <th className="text-left font-serif font-bold">Remarks</th>
                   <th className="text-right font-serif font-bold">Grade</th>
                 </tr>
               </thead>
               <tbody className="">
-                {submittedAssignmentsToShow.map((assignment) => (
-                  <tr key={assignment._id} className="align-middle h-16">
-                    <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
-                      {/* Icon or Image */}
-                    </td>
-                    <td>
-                      <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
-                      <p className="font-serif">{assignment.assignmentDetails.title}</p>
-                    </td>
-                    <td>
-                      <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
-                    </td>
-                    <td>
-                      <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
-                    </td>
-                    <td className="text-right">
-                      <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
-                        <p className="font-serif font-bol">{assignment.assignments.grade}</p>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {submittedAssignmentsToShow
+                  .filter((assignment) => {
+                    const gradeDate = new Date(assignment.assignments.submissionDate);
+                    const oneDayAgo = new Date();
+                    oneDayAgo.setDate(oneDayAgo.getDate() - 2);
+                    return gradeDate > oneDayAgo;
+                  })
+                  .map((assignment) => (
+                    <tr key={assignment.assignmentDetails._id} className="align-middle h-16">
+                      <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
+                        {/* Icon or Image */}
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
+                        <p className="font-serif">{assignment.assignmentDetails.title}</p>
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
+                      </td>
+                      <td className="text-right">
+                        <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
+                          <p className="font-serif font-bol">{assignment.assignments.grade}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 {/* Add more rows as needed */}
               </tbody>
             </table>
+            {(
+              <div
+                className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
+                onClick={handleViewMoreClickForSubmitted}
+              >
+                View More
+              </div>
+            )}
           </div>
           <div className="w-1/4 h-96 bg-white rounded-2xl p-4 bg-[url('/background.svg')] bg-cover bg-center">
             {/* Box-2 Content */}
@@ -272,13 +353,13 @@ export default function Home() {
       </div>
 
       {/* Pending Assignments Modal */}
-      <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center modal-overlay modal-overlay ${isModalOpen ? 'show' : ''}`}>
-        <div className={`bg-white p-4 rounded-lg w-3/4 h-3/4 overflow-auto modal-content ${isModalOpen ? 'show' : ''}`}>
+      <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center modal-overlay modal-overlay ${isPendingModalOpen ? 'show' : ''}`}>
+        <div className={`bg-white p-4 rounded-lg w-3/4 h-3/4 overflow-auto modal-content ${isPendingModalOpen ? 'show' : ''}`}>
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-serif font-bold">All Pending Assignments</h2>
             <button
               className="text-darkblue font-bold"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => setIsPendingModalOpen(false)}
             >
               <X />
             </button>
@@ -318,6 +399,57 @@ export default function Home() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* submittedAssignment model */}
+      <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center modal-overlay modal-overlay ${isSubmittedModalOpen ? 'show' : ''}`}>
+        <div className={`bg-white p-4 rounded-lg w-3/4 h-3/4 overflow-auto modal-content ${isSubmittedModalOpen ? 'show' : ''}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-serif font-bold">All Submitted Assignments</h2>
+            <button
+              className="text-darkblue font-bold"
+              onClick={() => setIsSubmittedModalOpen(false)}
+            >
+              <X />
+            </button>
+          </div>
+          <table className="w-full mt-4">
+              <thead className="">
+                <tr className="text-gray-500">
+                  <th className="text-left font-serif font-bold"></th>
+                  <th className="text-left font-serif font-bold w-2/6">Assignment</th>
+                  <th className="text-left font-serif font-bold">Submission Date</th>
+                  <th className="text-left font-serif font-bold">Remarks</th>
+                  <th className="text-right font-serif font-bold">Grade</th>
+                </tr>
+              </thead>
+              <tbody className="">
+                {submittedAssignment.map((assignment) => (
+                    <tr key={assignment.assignmentDetails._id} className="align-middle h-16">
+                      <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
+                        {/* Icon or Image */}
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
+                        <p className="font-serif">{assignment.assignmentDetails.title}</p>
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
+                      </td>
+                      <td>
+                        <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
+                      </td>
+                      <td className="text-right">
+                        <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
+                          <p className="font-serif font-bol">{assignment.assignments.grade}</p>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                {/* Add more rows as needed */}
+              </tbody>
+            </table>
         </div>
       </div>
 
