@@ -26,6 +26,7 @@ export default function AdminHome() {
         totalStudents: number;
         pendingStudentsCount: number;
     }
+    
     const [state, setState] = useState<{
         filteredData: string;
         faculty: { name: string };
@@ -124,7 +125,7 @@ export default function AdminHome() {
 
     const filteredPendingStudent = state.pendingStudents ? state.pendingStudents.filter((data: any) => data.name.toLowerCase().includes(state.filterPendingStudents.toLowerCase())) : []
 
-    const filteredSubmittedStudent = state.submitedStudents ? state.submitedStudents.filter((data: any) => data.name.toLowerCase().includes(state.filterSubmittedStudents.toLowerCase())) : []
+    // const filteredSubmittedStudent = state.submitedStudents ? state.submitedStudents.filter((data: any) => data.name.toLowerCase().includes(state.filterSubmittedStudents.toLowerCase())) : []
 
     return (
         <>
@@ -342,22 +343,23 @@ export default function AdminHome() {
                                     </td>
                                 </tr>
                             ))}
-                            {activeTab === "submitted" && filteredSubmittedStudent.map((student: any) => (
-                                <tr key={student.id} className="align-middle h-16">
+                            {activeTab === "submitted" && state.submitedStudents.map((student: any) => (
+                                <tr key={student.rollNo} className="align-middle h-16">
                                     <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
                                         {/* Icon or Image */}
                                     </td>
                                     <td>
-                                        <p className="font-serif font-bold">{student.name}</p>
+                                        <p className="font-serif font-bold">{student.studentName}</p>
+                                        <p className="font-serif font-bold">{`(${student.rollNo})`}</p>
                                     </td>
                                     <td>
-                                        <p className="font-serif font-bold">{new Date(student.assignments.submissionDate).toLocaleDateString()}</p>
+                                        <p className="font-serif font-bold">{new Date(student.submissionDate).toLocaleDateString()}</p>
                                     </td>
                                     <td>
-                                        <p className="font-serif font-bold">{student.assignments.grade}</p>
+                                        <p className="font-serif font-bold">{student.grade}</p>
                                     </td>
-                                    <td className="text-right">
-                                        <p className="font-serif font-bold">{student.assignments.remarks}</p>
+                                    <td className="text-left">
+                                        <p className="font-serif font-bold">{student.remarks}</p>
                                     </td>
                                 </tr>
                             ))}

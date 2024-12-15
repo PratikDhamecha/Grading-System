@@ -17,6 +17,8 @@ export default function Home() {
   const [notification, setNotification] = useState([]);
   const fileInputRef = useRef(null);
   const studentId = localStorage.getItem('studentId');
+  const [isNotificationModelOpen, setIsNotificationModelOpen] = useState(false);
+  const [latestNotification, setLatestNotification] = useState([]);
 
   useEffect(() => {
     // Get student
@@ -34,6 +36,10 @@ export default function Home() {
       fetch("http://localhost:5000/notifications/student/" + studentId)
         .then((res) => res.json())
         .then((data) => setNotification(data))
+
+      fetch("http://localhost:5000/notifications/latest/" + studentId)
+        .then((res) => res.json())
+        .then((data) => setLatestNotification(data))
     }
   }, [student])
 
@@ -83,7 +89,8 @@ export default function Home() {
     )
     : [];
   const submittedAssignmentsToShow = filteredSubmittedAssignments.slice(0, 4);
-  
+
+
   const getBackgroundColorClass = (grade) => {
     if (grade == 'A' || grade == 'A+') {
       return 'bg-green-500';
@@ -94,7 +101,7 @@ export default function Home() {
     }
   };
 
-  
+
   const handleDivClick = () => {
     // Programmatically trigger the file input click
     fileInputRef.current.click();
@@ -147,7 +154,9 @@ export default function Home() {
         {/* Right side section */}
         <div>
           <div className="h-12 w-12 rounded-full bg-white flex items-center justify-center float-end">
-            <Bell color="#05041F" />
+            <Bell color="#05041F" className="cursor-pointer" onClick={() => {
+              setIsNotificationModelOpen(true);
+            }} />
           </div>
         </div>
       </div>
@@ -258,20 +267,26 @@ export default function Home() {
           </div>
           <div className="w-1/4 h-96 bg-white rounded-2xl p-4">
             {/* Box-2 Header */}
-            <div className="">
+            <div>
               <p className="text-2xl font-serif font-bold mb-3">Notification</p>
             </div>
             {/* Box-2 Content */}
-            <div className="flex flex-col">
-              {notification.map((notify) => (
-                <div key={notify._id} className="bg-slate-200 w-full rounded-lg p-4 mb-4">
-                  <h1 className="text-gray-800 text-xl font-bold mb-1">{notify.title}</h1>
-                  <p className="text-gray-600 text-sm">{notify.message}</p>
+            <div
+              className={`flex flex-col space-y-4 overflow-y-auto ${latestNotification.length > 3 ? "h-72" : ""}`}
+              style={{ scrollBehavior: "smooth" }}
+            >
+              {latestNotification.length > 0 ? (
+                latestNotification.map((notify) => (
+                  <div key={notify._id} className="bg-slate-200 w-full rounded-lg p-4">
+                    <h1 className="text-gray-800 text-xl font-bold mb-1">{notify.title}</h1>
+                    <p className="text-gray-600 text-sm">{notify.message}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="flex justify-center items-center">
+                  <p className="text-gray-600 text-md align-middle">No latest notification</p>
                 </div>
-              ))}
-              {/* <div className="h-10 bg-slate-200 w-full rounded-full flex justify-center items-center">
-                <p className="text-gray-500">New Assingment of CN uploaded</p>
-              </div> */}
+              )}
             </div>
           </div>
         </div>
@@ -309,8 +324,8 @@ export default function Home() {
                   .filter((assignment) => {
                     const gradeDate = new Date(assignment.assignments.submissionDate);
                     const oneDayAgo = new Date();
-                    oneDayAgo.setDate(oneDayAgo.getDate() - 2);
-                    return gradeDate > oneDayAgo;
+                    gradeDate.setDate(gradeDate.getDate() + 1);
+                    return oneDayAgo > gradeDate;
                   })
                   .map((assignment) => (
                     <tr key={assignment.assignmentDetails._id} className="align-middle h-16">
@@ -415,41 +430,74 @@ export default function Home() {
             </button>
           </div>
           <table className="w-full mt-4">
-              <thead className="">
-                <tr className="text-gray-500">
-                  <th className="text-left font-serif font-bold"></th>
-                  <th className="text-left font-serif font-bold w-2/6">Assignment</th>
-                  <th className="text-left font-serif font-bold">Submission Date</th>
-                  <th className="text-left font-serif font-bold">Remarks</th>
-                  <th className="text-right font-serif font-bold">Grade</th>
-                </tr>
-              </thead>
-              <tbody className="">
-                {submittedAssignment.map((assignment) => (
-                    <tr key={assignment.assignmentDetails._id} className="align-middle h-16">
-                      <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
-                        {/* Icon or Image */}
-                      </td>
-                      <td>
-                        <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
-                        <p className="font-serif">{assignment.assignmentDetails.title}</p>
-                      </td>
-                      <td>
-                        <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
-                      </td>
-                      <td>
-                        <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
-                      </td>
-                      <td className="text-right">
-                        <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
-                          <p className="font-serif font-bol">{assignment.assignments.grade}</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                {/* Add more rows as needed */}
-              </tbody>
-            </table>
+            <thead className="">
+              <tr className="text-gray-500">
+                <th className="text-left font-serif font-bold"></th>
+                <th className="text-left font-serif font-bold w-2/6">Assignment</th>
+                <th className="text-left font-serif font-bold">Submission Date</th>
+                <th className="text-left font-serif font-bold">Remarks</th>
+                <th className="text-right font-serif font-bold">Grade</th>
+              </tr>
+            </thead>
+            <tbody className="">
+              {submittedAssignment
+                .filter((assignment) => {
+                  const gradeDate = new Date(assignment.assignments.submissionDate);
+                  const oneDayAgo = new Date();
+                  gradeDate.setDate(gradeDate.getDate() + 1);
+                  return oneDayAgo > gradeDate;
+                })
+                .map((assignment) => (
+                  <tr key={assignment.assignmentDetails._id} className="align-middle h-16">
+                    <td className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center me-2">
+                      {/* Icon or Image */}
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{assignment.assignmentDetails.subjectName}</p>
+                      <p className="font-serif">{assignment.assignmentDetails.title}</p>
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{new Date(assignment.assignments.submissionDate).toLocaleDateString()}</p>
+                    </td>
+                    <td>
+                      <p className="font-serif font-bold">{assignment.assignments.remarks}</p>
+                    </td>
+                    <td className="text-right">
+                      <div className={`${getBackgroundColorClass(assignment.assignments.grade)}  text-white h-8 w-8 p-2 rounded-full inline-flex items-center justify-center`}>
+                        <p className="font-serif font-bol">{assignment.assignments.grade}</p>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              {/* Add more rows as needed */}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className={`fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center modal-overlay modal-overlay ${isNotificationModelOpen ? 'show' : ''}`}>
+        <div className={`bg-white p-4 rounded-lg w-1/3 h-3/4 overflow-auto modal-content ${isNotificationModelOpen ? 'show' : ''}`}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-serif font-bold">All Notofications</h2>
+            <button
+              className="text-darkblue font-bold cursor-pointer"
+              onClick={() => setIsNotificationModelOpen(false)}
+            >
+              <X />
+            </button>
+          </div>
+          {/* Box-2 Content */}
+          <div className="flex flex-col">
+            {notification.map((notify) => (
+              <div key={notify._id} className="bg-slate-200 w-full rounded-lg p-4 mb-4">
+                <h1 className="text-gray-800 text-xl font-bold mb-1">{notify.title}</h1>
+                <p className="text-gray-600 text-sm">{notify.message}</p>
+              </div>
+            ))}
+            {/* <div className="h-10 bg-slate-200 w-full rounded-full flex justify-center items-center">
+                <p className="text-gray-500">New Assingment of CN uploaded</p>
+              </div> */}
+          </div>
         </div>
       </div>
 

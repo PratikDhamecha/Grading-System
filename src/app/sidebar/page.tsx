@@ -16,13 +16,15 @@ export default function Sidebar() {
                 <div className="flex-grow flex items-center">
                     <ul className="space-y-4">
                         <li>
-                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue default:bg-darkblue">
+                            <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue default:bg-darkblue" onClick={() => {
+                                router.replace('/User')
+                            }}>
                                 <LayoutGrid color="#514DEC" />
                             </div>
                         </li>
                         <li>
                             <div className="h-14 w-14 rounded-full bg-gray-200 flex items-center justify-center cursor-pointer hover:bg-darkblue" onClick={() => {
-                                router.push('/profile')
+                                router.replace('/User/Subjects')
                             }}>
                                 <Box color="#514DEC" />
                             </div>
