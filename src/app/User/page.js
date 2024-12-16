@@ -81,14 +81,14 @@ export default function Home() {
     ? pedningAssignment.filter((assign) =>
       assign.subjectName?.toLowerCase().includes(filteredPendingAssignment.toLowerCase())
     ) : [];
-  const assignmentsToShow = pendingShowMore ? filteredAssignments : filteredAssignments.slice(0, 4);
+  const assignmentsToShow = pendingShowMore ? filteredAssignments : filteredAssignments.slice(0, 3);
 
   const filteredSubmittedAssignments = submittedAssignment
     ? submittedAssignment.filter((assign) =>
       assign.assignmentDetails.subjectName?.toLowerCase().includes((filteredSubmittedAssignment || "").toLowerCase())
     )
     : [];
-  const submittedAssignmentsToShow = filteredSubmittedAssignments.slice(0, 4);
+  const submittedAssignmentsToShow = submittedShowMore ? filteredSubmittedAssignments : filteredSubmittedAssignments.slice(0, 3);
 
 
   const getBackgroundColorClass = (grade) => {
@@ -183,7 +183,7 @@ export default function Home() {
               <div className="flex flex-row justify-end align-middle space-x-2">
                 <div className="relative">
                   <input
-                    className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
+                    className="bg-slate-200 h-10 rounded-lg ps-3 pe-3 w-full"
                     type="text"
                     placeholder="Search by subject"
                     onChange={(e) => setFilteredPendingAssignment(e.target.value)}
@@ -256,7 +256,7 @@ export default function Home() {
                 </tr>
               </tbody>
             </table>
-            {(
+            {pedningAssignment.length > 3 && (
               <div
                 className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
                 onClick={handleViewMoreClickForPending}
@@ -295,15 +295,32 @@ export default function Home() {
             {/* Box-1 Header Content */}
             <div className="flex flex-row justify-between">
               <p className="text-2xl font-serif font-bold mb-3">Submitted assignments</p>
-              <div className="relative align-middle">
-                <input
-                  className="bg-slate-200 h-10 rounded-full ps-3 pe-3 w-full"
-                  type="text"
-                  placeholder="Search by subject"
-                  onChange={(e) => setFilteredSubmittedAssignment(e.target.value)}
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
-                  <Search className="text-gray-500" />
+              <div className="flex flex-row justify-end align-middle space-x-2">
+                <div className="relative">
+                  <input
+                    className="bg-slate-200 h-10 rounded-lg ps-3 pe-3 w-full"
+                    type="text"
+                    placeholder="Search by subject"
+                    onChange={(e) => setFilteredSubmittedAssignment(e.target.value)}
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pb-1">
+                    <Search className="text-gray-500" />
+                  </div>
+                </div>
+                <div className="relative">
+                  <select className="bg-slate-200 h-10 rounded-lg ps-3 pe-10 w-full appearance-none text-gray-700" onChange={(e) => {
+                    setFilteredSubmittedAssignment(e.target.value)
+                  }}>
+                    <option value="">Select Subject</option>
+                    {subject.map((subject) => {
+                      return (
+                        <option key={subject._id} value={subject.subjectName} className="text-gray-700">{subject.subjectName}</option>
+                      )
+                    })}
+                  </select>
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                    <ChevronDown className="text-gray-500" />
+                  </div>
                 </div>
               </div>
             </div>
@@ -352,7 +369,7 @@ export default function Home() {
                 {/* Add more rows as needed */}
               </tbody>
             </table>
-            {(
+            {submittedAssignment.length > 3 && (
               <div
                 className="mt-4 text-gray-500 px-4 py-2 rounded w-full text-center cursor-pointer flex justify-center items-center"
                 onClick={handleViewMoreClickForSubmitted}

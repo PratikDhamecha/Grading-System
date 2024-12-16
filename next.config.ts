@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     ];
   },
   images: {
-    domains: ['i.pinimg.com'],
+    domains: ['i.pinimg.com','wallpaperaccess.com','ak.picdn.net','s3.amazonaws.com'],
   },
 };
 
